@@ -137,6 +137,7 @@ Next, the function checks to see whether there's a DHCP option set assigned to t
 Use the AWS CLI to create the Lambda function:
 
 1) Download the **union.py.zip** file from the [AWS Labs GitHub repo](https://github.com/awslabs/aws-lambda-ddns-function).
+
 2) Execute the following command to create the function.  Note that you need to update the command to use the ARN of the role that you created earlier, as well as the local path to the union.py.zip file containing the Python code for the Lambda function.
 ```
 aws lambda create-function --function-name ddns_lambda --runtime python2.7 --role <enter-your-role-arn-here> --handler union.lambda_handler --timeout 30 --zip-file fileb://<LOCAL PATH>/union.py.zip
