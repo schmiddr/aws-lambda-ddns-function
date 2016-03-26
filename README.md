@@ -200,7 +200,7 @@ Enter the key and value for **Step 5: Tag Instance** then choose **Review and La
 
 ![Tag Instance](https://github.com/awslabs/aws-lambda-ddns-function/blob/master/images/step-6-6optional2_1.png)
 
-1.	Complete the launch of the instance and wait until the instance state changes to “running”.  Then, continue to the next step.
+4) Complete the launch of the instance and wait until the instance state changes to “running”.  Then, continue to the next step.
 
 _Validating results_
 
