@@ -30,6 +30,8 @@ Private hosted zones help you overcome these challenges by allowing you to creat
 
 So while VPC DNS can provide basic name resolution for your VPC, Route 53 private hosted zones offer richer functionality by comparison.  It also has a programmable API that can be used to automate the creation/removal of records sets and hosted zones which we’re going leverage extensively in this project. 
 
+##Use case
+
 Route 53 doesn't offer support for dynamic registration of resource record sets for public or private hosted zones.  This can pose challenges when an automatic scaling event occurs and the instances are not behind a load balancer.  A common workaround is to use an automation framework like Chef, Puppet, Ansible, or Salt to create resource records, or by adding instance user data to the launch profile of the Auto Scaling group.  The drawbacks to these approaches is that:
 
 1. automation frameworks typically require you to manage additional infrastructure.
@@ -108,7 +110,7 @@ The **ddns-trust.json** file contains the trust policy that grants the Lambda se
 ```
 aws iam create-policy --policy-name ddns-lambda-policy --policy-document file://<LOCAL PATH>/ddns-pol.json
 ```
-3) Create the **ddns-lambda-role IAM role** using the trust policy in the **ddns-trust.json** file.  You need to replace **<LOCAL PATH>** with your local path to the **ddns-trust.json** file.  The output of the **aws iam create-role** command includes the ARN associated with the role that you created.  Save this ARN as you need it when you create the Lambda function in the next section.
+3) Create the **ddns-lambda-role IAM role** using the trust policy in the **ddns-trust.json** file.  You need to replace **\<LOCAL PATH\>** with your local path to the **ddns-trust.json** file.  The output of the **aws iam create-role** command includes the ARN associated with the role that you created.  Save this ARN as you need it when you create the Lambda function in the next section.
 ```
 aws iam create-role --role-name ddns-lambda-role --assume-role-policy-document file://<LOCAL PATH>/ddns-trust.json
 ```
