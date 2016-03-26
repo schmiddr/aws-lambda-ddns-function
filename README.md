@@ -104,7 +104,7 @@ The **ddns-trust.json** file contains the trust policy that grants the Lambda se
   ]
 }
 ```
-2) Create the policy using the policy document in the **ddns-pol.json** file.  You need to replace **<LOCAL PATH>** with your local path to the **ddns-pol.json** file.   The output of the **aws iam create-policy** command includes the Amazon Resource Locator (ARN).  Save the ARN as you need it for future steps.
+2) Create the policy using the policy document in the **ddns-pol.json** file.  You need to replace **\<LOCAL PATH\>** with your local path to the **ddns-pol.json** file.   The output of the **aws iam create-policy** command includes the Amazon Resource Locator (ARN).  Save the ARN as you need it for future steps.
 ```
 aws iam create-policy --policy-name ddns-lambda-policy --policy-document file://<LOCAL PATH>/ddns-pol.json
 ```
