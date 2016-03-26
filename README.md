@@ -164,7 +164,7 @@ To create the private hosted zone in Route 53, follow the steps outlined in [Cre
 
 #####Step 5 – Create a DHCP options set and associate it with the VPC
 
-In this step, you create a new DHCP options set and set the domain to be that of your private hosted zone.
+In this step, you create a new DHCP options set, and set the domain to be that of your private hosted zone.
 
 1) Follow the steps outlined in [Creating a DHCP Options Set](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_DHCP_Options.html#CreatingaDHCPOptionSet) to create a new set of DHCP options.
 
