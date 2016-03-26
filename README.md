@@ -239,4 +239,4 @@ Now that you’ve seen how you can combine various AWS services to automate the 
 
 To learn more about CloudWatch Events, see [Using CloudWatch Events](http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/WhatIsCloudWatchEvents.html) in the _Amazon CloudWatch Developer Guide_.  To learn more about Lambda and serverless infrastructures, see the [AWS Lambda Developer Guide](http://docs.aws.amazon.com/lambda/latest/dg/welcome.html) and the “[Microservices without the Servers](https://aws.amazon.com/blogs/compute/microservices-without-the-servers/)” blog post.  
 
-We’ve open-sourced the code in this example in the [AWS Labs GitHub repo](https://github.com/awslabs/aws-lambda-ddns-function) and can’t wait to see your feedback and your ideas about how to improve the solution.
+We’ve open-sourced the code in this example in the [AWS Labs GitHub repo](https://github.com/awslabs/aws-lambda-ddns-function) and can’t wait to see your feedback and read your ideas about how to improve the solution.
