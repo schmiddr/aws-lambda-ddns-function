@@ -166,3 +166,72 @@ In this step, you create a new DHCP options set and set the domain to be that of
 2) In the **Create DHCP options set** dialog box, give the new options set a name, set **Domain name** to the name of the private hosted zone that you created in Route 53, and set **Domain name servers** to “AmazonProvidedDNS”.  Choose **Yes, Create**.
 
 ![DHCP Option Set](https://github.com/awslabs/aws-lambda-ddns-function/blob/master/images/step-5-4.png)
+
+3) Next, follow the steps outlined in Changing the Set of DHCP Options a VPC Uses to update the VPC to use the newly-created DHCP options set.
+
+#####Step 6 – Launching the EC2 instance and validating results
+
+In this step, you launch an EC2 instance and verify that the function executed successfully.
+
+As mentioned previously, the Lambda function looks for the ZONE or CNAME tags associated with the EC2 instance.  If you specify these tags when you launch the instance, you should include the trailing dot.  In this example, the ZONE tag would be set to “ddnslambda.com.” and the CNAME tag could be set to “test.ddnslambda.com.”.
+
+Because you updated the DHCP options set in this example, the Lambda function uses the specified zone when it creates the Route 53 DNS resource records.  You can use the ZONE tag to override this behavior if you wanted the function to update a different hosted zone, for example.
+
+In this example, you launch an EC2 instance into the private subnet of the VPC.  Because you updated the domain value of the DHCP options set to be that of the private hosted zone, the Lambda function creates the DNS resource records in the Route 53 zone file. 
+
+_Launching the EC2 instance_
+
+1) Follow the steps to launch an EC2 instance outlined in [Launching an Instance](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/launching-instance.html). 
+
+2) In **Step 3: Configure Instance Details**, for **Network**, select the VPC.  For **Subnet**, select the private subnet.  Choose **Review and Launch**.
+
+3) (Optional)  If you would like to update a different private hosted zone than the one you associated with the VPC, specify the ZONE tag in this step.  You can also specify the CNAME tag if you would like the function to create a CNAME resource record in the associated zone.
+
+Choose **Edit tags** in the **Step 7: Review Instance Launch**.
+
+Enter the key and value for **Step 5: Tag Instance** then choose **Review and Launch**.
+
+![Tag Instance](https://github.com/awslabs/aws-lambda-ddns-function/blob/master/images/step-6-6optional2_1.png)
+
+1.	Complete the launch of the instance and wait until the instance state changes to “running”.  Then, continue to the next step.
+
+_Validating results_
+
+In this step, you verify that your Lambda function successfully updated the Rout 53 resource records.
+
+1) Log in to the [Route 53 console](https://console.aws.amazon.com/route53/).
+
+2) In the left navigation pane, choose **Hosted Zones** to view the list of private and public zones currently configured in Route 53.
+
+3) Select the hosted zone that you created in step 4, to view the zone file.
+
+![Hosted Zone](https://github.com/awslabs/aws-lambda-ddns-function/blob/master/images/step-7-4.png)
+
+4) Verify that the resource records were created.
+
+![Resource Records](https://github.com/awslabs/aws-lambda-ddns-function/blob/master/images/step-7-5-1.png)
+
+5) Now that you’ve verified that the Lambda function successfully updated the Route 53 resource records in the zone file, stop the EC2 instance and verify that the records are removed by the function.  
+
+6) Log in to the [EC2 console](https://console.aws.amazon.com/ec2/).
+
+7) Choose **Instances** in the left navigation pane.
+
+![Instances](https://github.com/awslabs/aws-lambda-ddns-function/blob/master/images/results_6.png)
+
+8) Select the EC2 instance you launched earlier and choose **Stop**.
+
+![Stop Instance](https://github.com/awslabs/aws-lambda-ddns-function/blob/master/images/results_7.png)
+
+9) Follow Steps 1 – 3 to view the DNS resource records in the Route 53 zone.
+
+10) Verify that the records have been removed from the zone file by the Lambda function.
+
+
+##Conclusion
+
+Now that you’ve seen how you can combine various AWS services to automate the creation and removal of Route 53 resource records, we hope it inspires you to create your own solutions.  CloudWatch Events is a powerful tool because it allows you to respond to events in real-time, such as when an instance changes state.  When used with Lambda, you can create highly scalable serverless infrastructures that react instantly to infrastructure changes.  
+
+To learn more about CloudWatch Events, see [Using CloudWatch Events](http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/WhatIsCloudWatchEvents.html) in the _Amazon CloudWatch Developer Guide_.  To learn more about Lambda and serverless infrastructures, see the [AWS Lambda Developer Guide](http://docs.aws.amazon.com/lambda/latest/dg/welcome.html) and the “[Microservices without the Servers](https://aws.amazon.com/blogs/compute/microservices-without-the-servers/)” blog post.  
+
+We’ve open-sourced the code in this example in the [AWS Labs GitHub repo](https://github.com/awslabs/aws-lambda-ddns-function) and can’t wait to see your feedback and your ideas about how to improve the solution.
