@@ -165,3 +165,4 @@ In this step, you create a new DHCP options set and set the domain to be that of
 
 2) In the **Create DHCP options set** dialog box, give the new options set a name, set **Domain name** to the name of the private hosted zone that you created in Route 53, and set **Domain name servers** to “AmazonProvidedDNS”.  Choose **Yes, Create**.
 
+![DHCP Option Set](https://github.com/awslabs/aws-lambda-ddns-function/blob/master/images/step-5-4.png)
