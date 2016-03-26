@@ -2,7 +2,7 @@
 
 ##Introduction
 
-Dynamic registration of resource records is useful when you have instances that are not behind a load balancer and that you would like address by a host name and domain suffix of your choosing rather than the default \<region\>.compute.internal or ec2.internal assigned by VPC DNS. 
+Dynamic registration of resource records is useful when you have instances that are not behind a load balancer and that you would like to address by a host name and domain suffix of your choosing rather than the default \<region\>.compute.internal or ec2.internal assigned by VPC DNS. 
 
 In this project we explore how you can use [CloudWatch Events](https://aws.amazon.com/cloudwatch) and Lambda to create a Dynamic DNS for Route 53. Besides creating A records, this project allows you to create alias, i.e. CNAME records, for when you want to address a server by a "friendly" or alternate name. Although this is antithetical to treating instances as disposable resources, there are still a lot of shops that find this useful.
 
