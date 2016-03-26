@@ -108,7 +108,7 @@ The **ddns-trust.json** file contains the trust policy that grants the Lambda se
 ```
 aws iam create-policy --policy-name ddns-lambda-policy --policy-document file://<LOCAL PATH>/ddns-pol.json
 ```
-3) Create the **ddns-lambda-role IAM role** using the trust policy in the **ddns-trust.json** file.  You need to replace **\<LOCAL PATH\>** with your local path to the **ddns-trust.json** file.  The output of the **aws iam create-role** command includes the ARN associated with the role that you created.  Save this ARN since you will need it when you create the Lambda function in the next section.
+3) Create the **ddns-lambda-role** IAM role using the trust policy in the **ddns-trust.json** file.  You need to replace **\<LOCAL PATH\>** with your local path to the **ddns-trust.json** file.  The output of the **aws iam create-role** command includes the ARN associated with the role that you created.  Save this ARN since you will need it when you create the Lambda function in the next section.
 ```
 aws iam create-role --role-name ddns-lambda-role --assume-role-policy-document file://<LOCAL PATH>/ddns-trust.json
 ```
