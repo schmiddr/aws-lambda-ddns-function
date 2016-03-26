@@ -2,9 +2,9 @@
 
 ##Introduction
 
-Dynamic registration of resource records is useful when you have instances that are not behind a load balancer that you would like address by a host name and domain suffix of your choosing rather than the default \<region\>.compute.internal or ec2.internal. 
+Dynamic registration of resource records is useful when you have instances that are not behind a load balancer and that you would like address by a host name and domain suffix of your choosing rather than the default \<region\>.compute.internal or ec2.internal assigned by VPC DNS. 
 
-In this project we explore how you can use [CloudWatch Events](https://aws.amazon.com/cloudwatch) and Lambda to create a Dynamic DNS for Route 53. Besides creating A records, this project lets you to create alias, i.e. CNAME records, for when you want to address a server by a "friendly" or alternate name. Although this is antithetical to treating instances as disposable resources, there are still a lot of shops that find this useful.
+In this project we explore how you can use [CloudWatch Events](https://aws.amazon.com/cloudwatch) and Lambda to create a Dynamic DNS for Route 53. Besides creating A records, this project allows you to create alias, i.e. CNAME records, for when you want to address a server by a "friendly" or alternate name. Although this is antithetical to treating instances as disposable resources, there are still a lot of shops that find this useful.
 
 ##Using CloudWatch and Lambda to respond to infrastructure changes in real-time
 
@@ -18,7 +18,7 @@ The example provided in this project works precisely this way.  It uses informat
 
 Route 53 offers the convenience of domain name services without having to build a globally distributed highly reliable DNS infrastructure.  It allows instances within your VPC to resolve the names of resources that run within your AWS environment. It also lets clients on the Internet resolve names of your public-facing resources.  This is accomplished by querying resource record sets that reside within a Route 53 public or private hosted zone.   
 
-A private hosted zone is basically a container that holds information about how you want to route traffic for a domain and its subdomains within one or more VPC whereas a public hosted zone is a container that holds information about how you want to route traffic from the Internet.
+A private hosted zone is basically a container that holds information about how you want to route traffic for a domain and its subdomains within one or more VPCs whereas a public hosted zone is a container that holds information about how you want to route traffic from the Internet.
 
 ##Choosing between VPC DNS or Route 53 Private Hosted Zones
 
@@ -28,11 +28,9 @@ Unless you create a DHCP option set with a custom domain name and disable hostna
 
 Private hosted zones help you overcome these challenges by allowing you to create different resource record types with a custom domain suffix.  Moreover, with Route 53 you can create a subdomain for your current DNS namespace or you can migrate an existing subdomain to Route 53.  By using these options, you can create a contiguous DNS namespace between your on-premises environment and AWS.  
 
-So while VPC DNS can provide basic name resolution for your VPC, Route 53 private hosted zones offer richer functionality by comparison.  It also has a programmable API that can be used to automate the creation/removal of records sets and hosted zones which we’re going leverage extensively in this project. 
+So, while VPC DNS can provide basic name resolution for your VPC, Route 53 private hosted zones offer richer functionality by comparison.  It also has a programmable API that can be used to automate the creation/removal of records sets and hosted zones which we’re going leverage extensively in this project. 
 
-##Use case
-
-Route 53 doesn't offer support for dynamic registration of resource record sets for public or private hosted zones.  This can pose challenges when an automatic scaling event occurs and the instances are not behind a load balancer.  A common workaround is to use an automation framework like Chef, Puppet, Ansible, or Salt to create resource records, or by adding instance user data to the launch profile of the Auto Scaling group.  The drawbacks to these approaches is that:
+Route 53 doesn't offer support for dynamic registration of resource record sets for public or private hosted zones.  This can pose challenges when an automatic scaling event occurs and the instances are not behind a load balancer.  A common workaround is to use an automation framework like Chef, Puppet, Ansible, or Salt to create resource records, or by adding instance user data to the launch profile of the Auto Scaling group.  The drawbacks to these approaches are that:
 
 1. automation frameworks typically require you to manage additional infrastructure.
 2. instance user data doesn't handle the removal of resource records when the instance is terminated.
@@ -43,19 +41,19 @@ This was the motivation for creating a serverless architecture that dynamically 
 
 Make sure that you have the latest version of the AWS CLI installed locally.   For more information, see [Getting Set Up with the AWS Command Line Interface](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-set-up.html).
 
-For this example, create a new VPC configured with a private and public subnet, using [Scenario 2: VPC with Public and Private Subnets (NAT)](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Scenario2.html) from the Amazon VPC User Guide.  Ensure that the VPC has the DNS resolution and DNS hostnames options set to yes.
+For this example, create a new VPC configured with a private and public subnet, using [Scenario 2: VPC with Public and Private Subnets (NAT)](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Scenario2.html) from the Amazon VPC User Guide.  Ensure that the VPC has the **DNS resolution** and **DNS hostnames** options set to **yes**.
 
 After the VPC is created, you can proceed to the next steps.
 
 #####Step 1 – Create an IAM role for the Lambda function
 
-In this step, you use the AWS Command Line Interface (AWS CLI) to create the Identity and Access Management (IAM) role that the Lambda function assumes when the function is invoked.  You need to create an IAM policy with the required permissions and then attach this policy to the role. 
+In this step, you will use the AWS Command Line Interface (AWS CLI) to create the Identity and Access Management (IAM) role that the Lambda function assumes when the function is invoked.  You also need to create an IAM policy with the required permissions and then attach this policy to the role. 
 
 1) Download the **ddns-policy.json** and **ddns-trust.json** files from the [AWS Labs GitHub repo](https://github.com/awslabs/aws-lambda-ddns-function).  
 
 _ddns-policy.json_
 
-The policy includes **ec2:Describe permission**, required for the function to obtain the EC2 instance’s attributes, including the private IP address, public IP address, and DNS hostname.   The policy also includes DynamoDB and Route 53 full access, required for the function to create the DynamoDB table and to update the Route 53 DNS records.  The policy also allows the function to create log groups and log events.
+The policy includes **ec2:Describe permission**, required for the function to obtain the EC2 instance’s attributes, including the private IP address, public IP address, and DNS hostname.   The policy also includes DynamoDB and Route 53 full access which the function uses to create the DynamoDB table and update the Route 53 DNS records.  The policy also allows the function to create log groups and log events.
 ```JSON
 {
   "Version": "2012-10-17",
@@ -106,11 +104,11 @@ The **ddns-trust.json** file contains the trust policy that grants the Lambda se
   ]
 }
 ```
-2) Create the policy using the policy document in the **ddns-pol.json** file.  You need to replace **\<LOCAL PATH\>** with your local path to the **ddns-pol.json** file.   The output of the **aws iam create-policy** command includes the Amazon Resource Locator (ARN).  Save the ARN as you need it for future steps.
+2) Create the policy using the policy document in the **ddns-pol.json** file.  You need to replace **\<LOCAL PATH\>** with your local path to the **ddns-pol.json** file.   The output of the **aws iam create-policy** command includes the Amazon Resource Locator (ARN).  Save the ARN since you will need it for future steps.
 ```
 aws iam create-policy --policy-name ddns-lambda-policy --policy-document file://<LOCAL PATH>/ddns-pol.json
 ```
-3) Create the **ddns-lambda-role IAM role** using the trust policy in the **ddns-trust.json** file.  You need to replace **\<LOCAL PATH\>** with your local path to the **ddns-trust.json** file.  The output of the **aws iam create-role** command includes the ARN associated with the role that you created.  Save this ARN as you need it when you create the Lambda function in the next section.
+3) Create the **ddns-lambda-role IAM role** using the trust policy in the **ddns-trust.json** file.  You need to replace **\<LOCAL PATH\>** with your local path to the **ddns-trust.json** file.  The output of the **aws iam create-role** command includes the ARN associated with the role that you created.  Save this ARN since you will need it when you create the Lambda function in the next section.
 ```
 aws iam create-role --role-name ddns-lambda-role --assume-role-policy-document file://<LOCAL PATH>/ddns-trust.json
 ```
@@ -120,7 +118,7 @@ aws iam attach-role-policy --role-name ddns-lambda-role --policy-arn <enter-your
 ```
 #####Step 2 – Create the Lambda function
 
-The Lambda function uses modules included in the Python 2.7 Standard Library and the AWS SDK for Python module (boto3), which is preinstalled as part of the Lambda service.  As such, you do not need to create a deployment package for this example.
+The Lambda function uses modules included in the Python 2.7 Standard Library and the AWS SDK for Python module (boto3), which is preinstalled as part of the Lambda service.  As such, you do not need to create a deployment package for this function.
 
 - The function first checks if the “DDNS” table exists in DynamoDB and creates the table if it does not.  The table is used to keep a record of instances that have been created, along with their attributes.  It is necessary to do this because after an EC2 instance is terminated, its attributes are no longer available, so they must be fetched from the table.
 
@@ -138,11 +136,11 @@ Use the AWS CLI to create the Lambda function:
 
 1) Download the **union.py.zip** file from the [AWS Labs GitHub repo](https://github.com/awslabs/aws-lambda-ddns-function).
 
-2) Execute the following command to create the function.  Note that you need to update the command to use the ARN of the role that you created earlier, as well as the local path to the union.py.zip file containing the Python code for the Lambda function.
+2) Execute the following command to create the function.  Note that you will need to update the command to use the ARN of the role that you created earlier, as well as the local path to the union.py.zip file containing the Python code for the Lambda function.
 ```
 aws lambda create-function --function-name ddns_lambda --runtime python2.7 --role <enter-your-role-arn-here> --handler union.lambda_handler --timeout 30 --zip-file fileb://<LOCAL PATH>/union.py.zip
 ```
-3) The output of the command returns the ARN of the newly-created function.  Save this ARN, as you need it in the next section.
+3) The output of the command returns the ARN of the newly-created function.  Save this ARN, since you will need it in the next section.
 
 #####Step 3 – Create the CloudWatch Events Rule
 
@@ -150,7 +148,7 @@ In this step, you create the CloudWatch Events rule that triggers the Lambda fun
 ```
 aws events put-rule --event-pattern "{\"source\":[\"aws.ec2\"],\"detail-type\":[\"EC2 Instance State-change Notification\"],\"detail\":{\"state\":[\"running\",\"shutting-down\",\"stopped\"]}}" --state ENABLED --name ec2_lambda_ddns_rule
 ```
-The output of the command returns the ARN to the newly created CloudWatch Events rule, named **ec2\_lambda\_ddns\_rule**. Save the ARN, as you need it to associate the rule with the Lambda function and to set the appropriate Lambda permissions.
+The output of the command returns the ARN to the newly created CloudWatch Events rule, named **ec2\_lambda\_ddns\_rule**. Save the ARN, as you will need it to associate the rule with the Lambda function and to set the appropriate Lambda permissions.
 
 Next, set the target of the rule to the Lambda function.  Note that the **--targets** input parameter requires that you include a unique identifier for the **Id** target.  You also need to update the command to use the ARN of the Lambda function that you created previously.
 ```
