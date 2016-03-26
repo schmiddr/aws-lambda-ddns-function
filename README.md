@@ -130,12 +130,12 @@ Next, the function checks to see whether there's a DHCP option set assigned to t
 
 Use the AWS CLI to create the Lambda function:
 
-1. Download the **union.py.zip** file from the [AWS Labs GitHub repo](https://github.com/awslabs/aws-lambda-ddns-function).
-2. Execute the following command to create the function.  Note that you need to update the command to use the ARN of the role that you created earlier, as well as the local path to the union.py.zip file containing the Python code for the Lambda function.
+1) Download the **union.py.zip** file from the [AWS Labs GitHub repo](https://github.com/awslabs/aws-lambda-ddns-function).
+2) Execute the following command to create the function.  Note that you need to update the command to use the ARN of the role that you created earlier, as well as the local path to the union.py.zip file containing the Python code for the Lambda function.
 ```
 aws lambda create-function --function-name ddns_lambda --runtime python2.7 --role <enter-your-role-arn-here> --handler union.lambda_handler --timeout 30 --zip-file fileb://<LOCAL PATH>/union.py.zip
 ```
-3. The output of the command returns the ARN of the newly-created function.  Save this ARN, as you need it in the next section.
+3) The output of the command returns the ARN of the newly-created function.  Save this ARN, as you need it in the next section.
 
 #####Step 3 – Create the CloudWatch Events Rule
 
@@ -156,3 +156,12 @@ aws lambda add-permission --function-name ddns_lambda --statement-id 45 --action
 #####Step 4 – Create the private hosted zone in Route 53
 
 To create the private hosted zone in Route 53, follow the steps outlined in [Creating a Private Hosted Zone](http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/hosted-zone-private-creating.html).
+
+#####Step 5 – Create a DHCP options set and associate it with the VPC
+
+In this step, you create a new DHCP options set and set the domain to be that of your private hosted zone.
+
+1) Follow the steps outlined in [Creating a DHCP Options Set](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_DHCP_Options.html#CreatingaDHCPOptionSet) to create a new set of DHCP options.
+
+2) In the **Create DHCP options set** dialog box, give the new options set a name, set **Domain name** to the name of the private hosted zone that you created in Route 53, and set **Domain name servers** to “AmazonProvidedDNS”.  Choose **Yes, Create**.
+
