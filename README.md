@@ -24,7 +24,7 @@ A private hosted zone is basically a container that holds information about how 
 
 Admittedly, you can use VPC DNS for internal name resolution instead of Route 53 private hosted zones.  Although it doesn’t dynamically create resource records, VPC DNS will provide name resolution for all the hosts within a VPC’s CIDR range.  
 
-Unless you create a DHCP option set with a custom domain name and disable hostnames at the VPC, you can’t change the domain suffix; all instances are either assigned the ec2.internal or /<region/>.compute.internal domain suffix.  You can’t create aliases or other resource record types with VPC DNS either.  
+Unless you create a DHCP option set with a custom domain name and disable hostnames at the VPC, you can’t change the domain suffix; all instances are either assigned the ec2.internal or \<region\>.compute.internal domain suffix.  You can’t create aliases or other resource record types with VPC DNS either.  
 
 Private hosted zones help you overcome these challenges by allowing you to create different resource record types with a custom domain suffix.  Moreover, with Route 53 you can create a subdomain for your current DNS namespace or you can migrate an existing subdomain to Route 53.  By using these options, you can create a contiguous DNS namespace between your on-premises environment and AWS.  
 
