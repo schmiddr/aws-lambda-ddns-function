@@ -120,11 +120,11 @@ aws iam attach-role-policy --role-name ddns-lambda-role --policy-arn <enter-your
 
 The Lambda function uses modules included in the Python 2.7 Standard Library and the AWS SDK for Python module (boto3), which is preinstalled as part of the Lambda service.  As such, you do not need to create a deployment package for this function.
 
-- The function first checks if the “DDNS” table exists in DynamoDB and creates the table if it does not.  The table is used to keep a record of instances that have been created, along with their attributes.  It is necessary to do this because after an EC2 instance is terminated, its attributes are no longer available, so they must be fetched from the table.
+- The function first checks if the “DDNS” table exists in DynamoDB and creates the table if it does not.  The table is used to keep a record of instances that have been created, along with their attributes.  This is necessary because once an EC2 instance is terminated, its attributes are no longer available to be queried.  Instead, they must be fetched from the table.
 
-- The function then queries the event data to determine the change in the EC2 state.  If the state is “running”, the function queries the EC2 instance for the data.  If the state is anything else, it retrieves the information from the “DDNS” DynamoDB table.
+- The function then queries the event data to determine the instance's state.  If the state is “running”, the function queries the EC2 API for the data it will need to update DNS.  If the state is anything else, e.g. "stopped" or "terminated", it will retrieve the necessary information from the “DDNS” DynamoDB table.
 
-The function checks to ensure the VPC has the “DNS resolution” and “DNS hostnames” enabled as they are required in order to use Route 53 private hosted zones.  Next, the function checks whether a reverse lookup zone for the instance already exists.  If it does, it checks to see whether the reverse lookup zone is associated with the instance's VPC.  If it isn't, it creates the association.  This association is needed so the VPC uses Route 53 for DNS resolution.
+The function also checks whether “DNS resolution” and “DNS hostnames” are enabled since both are required in order to use Route 53 for private name resolution.  It then checks to see whether a private hosted zone for the instance exists.  If it does, it will proceed to check whether a private hosted zone is associated with the instance's VPC.  If no such association exists, the function will create the association.  Like DNS resolution and DNS hostname, this VPC/private-hosted-zone association is necessary in order for the VPC to Route 53 for DNS resolution.  
 
 - Next, the function checks the EC2 instance’s tags for the CNAME and ZONE tags.  If the ZONE tag is found, the function creates A and PTR records in the specified zone.  If the CNAME tag is found, the function creates a CNAME record in the specified zone.
 
