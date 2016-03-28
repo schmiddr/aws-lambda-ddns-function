@@ -120,7 +120,7 @@ aws iam attach-role-policy --role-name ddns-lambda-role --policy-arn <enter-your
 
 The Lambda function uses modules included in the Python 2.7 Standard Library and the AWS SDK for Python module (boto3), which is preinstalled as part of the Lambda service.  As such, you do not need to create a deployment package for this function.
 
-The function code performs the following:
+The code performs the following:
 
 -	Checks to see whether the “DDNS” table exists in DynamoDB and creates the table if it does not. This table is used to keep a record of instances that have been created along with their attributes. It’s necessary to persist the instance attributes in a table because once an EC2 instance is terminated, its attributes are no longer available to be queried via the EC2 API. Instead, they must be fetched from the table.
 
