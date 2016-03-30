@@ -13,6 +13,8 @@ compute = boto3.client('ec2')
 dynamodb_client = boto3.client('dynamodb')
 dynamodb_resource = boto3.resource('dynamodb')
 
+#event = { "id": "ee376907-2647-4179-9203-343cfb3017a4", "detail-type": "EC2 Instance State-change Notification", "source": "aws.ec2", "account": "123456789012", "time": "2015-11-11T21:30:34Z", "region": "us-east-1", "resources": [ "arn:aws:ec2:us-east-1:123456789012:instance/i-04308bdc" ], "detail": { "instance-id": "i-04308bdc", "state": "stopped" }}
+
 def lambda_handler(event, context):
     """ Check to see whether a DynamoDB table already exists.  If not, create it.  This table is used to keep a record of
     instances that have been created along with their attributes.  This is necessary because when you terminate an instance
@@ -131,7 +133,7 @@ def lambda_handler(event, context):
     # need to do this when you create the reverse lookup zone because the association is done automatically.
     if filter(lambda record: record['Name'] == reversed_lookup_zone, hosted_zones['HostedZones']):
         print 'Reverse lookup zone found:', reversed_lookup_zone
-        reverse_lookup_zone_id = get_zone_id(reversed_lookup_zone)
+        reverse_lookup_zone_id = get_zone_id(reversed_lookup_zone, 'Private')
         reverse_hosted_zone_properties = get_hosted_zone_properties(reverse_lookup_zone_id)
         if vpc_id in map(lambda x: x['VPCId'], reverse_hosted_zone_properties['VPCs']):
             print 'Reverse lookup zone %s is associated with VPC %s' % (reverse_lookup_zone_id, vpc_id)
@@ -146,7 +148,7 @@ def lambda_handler(event, context):
         # create private hosted zone for reverse lookups
         if state == 'running':
             create_reverse_lookup_zone(instance, reversed_domain_prefix, region)
-            reverse_lookup_zone_id = get_zone_id(reversed_lookup_zone)
+            reverse_lookup_zone_id = get_zone_id(reversed_lookup_zone, 'Private')
     # Wait a random amount of time.  This is a poor-mans back-off if a lot of instances are launched all at once.
     time.sleep(random.random())
 
@@ -158,7 +160,7 @@ def lambda_handler(event, context):
                 if tag.get('Value').lstrip().lower() in private_hosted_zone_collection:
                     print 'Private zone found:', tag.get('Value')
                     private_hosted_zone_name = tag.get('Value').lstrip().lower()
-                    private_hosted_zone_id = get_zone_id(private_hosted_zone_name)
+                    private_hosted_zone_id = get_zone_id(private_hosted_zone_name, 'Private')
                     private_hosted_zone_properties = get_hosted_zone_properties(private_hosted_zone_id)
                     if state == 'running':
                         if vpc_id in map(lambda x: x['VPCId'], private_hosted_zone_properties['VPCs']):
@@ -182,10 +184,11 @@ def lambda_handler(event, context):
                         except BaseException as e:
                             print e
                     # create PTR record
-                elif tag.get('Value').lstrip().lower() in public_hosted_zones_collection:
+                # Changed from elif to if
+                if tag.get('Value').lstrip().lower() in public_hosted_zones_collection:
                     print 'Public zone found', tag.get('Value')
                     public_hosted_zone_name = tag.get('Value').lstrip().lower()
-                    public_hosted_zone_id = get_zone_id(public_hosted_zone_name)
+                    public_hosted_zone_id = get_zone_id(public_hosted_zone_name, 'Public')
                     # create A record in public zone
                     if state =='running':
                         try:
@@ -197,8 +200,8 @@ def lambda_handler(event, context):
                             delete_resource_record(public_hosted_zone_id, public_host_name, public_hosted_zone_name, 'A', public_ip)
                         except BaseException as e:
                             print e
-                else:
-                    print 'No matching zone found for %s' % tag.get('Value')
+                #else:
+                #    print 'No matching zone found for %s' % tag.get('Value')
             else:
                 print '%s is not a valid host name' % tag.get('Value')
         # Consider making this an elif CNAME
@@ -209,9 +212,9 @@ def lambda_handler(event, context):
                 cname = tag.get('Value').lstrip().lower()
                 cname_host_name = cname.split('.')[0]
                 cname_domain_suffix = cname[cname.find('.')+1:]
-                cname_domain_suffix_id = get_zone_id(cname_domain_suffix)
+                cname_domain_suffix_id = get_zone_id(cname_domain_suffix, 'Private')
                 for cname_private_hosted_zone in private_hosted_zone_collection:
-                    cname_private_hosted_zone_id = get_zone_id(cname_private_hosted_zone)
+                    cname_private_hosted_zone_id = get_zone_id(cname_private_hosted_zone, 'Private')
                     if cname_domain_suffix_id == cname_private_hosted_zone_id:
                         if cname.endswith(cname_private_hosted_zone):
                             #create CNAME record in private zone
@@ -227,7 +230,7 @@ def lambda_handler(event, context):
                                     print e
                 for cname_public_hosted_zone in public_hosted_zones_collection:
                     if cname.endswith(cname_public_hosted_zone):
-                        cname_public_hosted_zone_id = get_zone_id(cname_public_hosted_zone)
+                        cname_public_hosted_zone_id = get_zone_id(cname_public_hosted_zone, 'Public')
                         #create CNAME record in public zone
                         if state == 'running':
                             try:
@@ -255,7 +258,7 @@ def lambda_handler(event, context):
             private_hosted_zone_name = configuration[0]
             print 'Private zone found %s' % private_hosted_zone_name
             # TODO need a way to prevent overlapping subdomains
-            private_hosted_zone_id = get_zone_id(private_hosted_zone_name)
+            private_hosted_zone_id = get_zone_id(private_hosted_zone_name, 'Private')
             private_hosted_zone_properties = get_hosted_zone_properties(private_hosted_zone_id)
             # create A records and PTR records
             if state == 'running':
@@ -335,12 +338,16 @@ def delete_resource_record(zone_id, host_name, hosted_zone_name, type, value):
                     ]
                 }
             )
-def get_zone_id(zone_name):
+def get_zone_id(zone_name, zone_type):
     """This function returns the zone id for the zone name that's passed into the function."""
+    #TODO determine which zone ID to return based on the calling function
     if zone_name[-1] != '.':
         zone_name = zone_name + '.'
     hosted_zones = route53.list_hosted_zones()
-    x = filter(lambda record: record['Name'] == zone_name, hosted_zones['HostedZones'])
+    if zone_type == 'Private':
+        x = filter(lambda record: record['Name'] == zone_name and record['Config']['PrivateZone'] == True, hosted_zones['HostedZones'])
+    if zone_type == 'Public':
+        x = filter(lambda record: record['Name'] == zone_name and record['Config']['PrivateZone'] == False, hosted_zones['HostedZones'])
     try:
         zone_id_long = x[0]['Id']
         zone_id = str.split(str(zone_id_long),'/')[2]
@@ -452,3 +459,5 @@ def get_hosted_zone_properties(zone_id):
     hosted_zone_properties = route53.get_hosted_zone(Id=zone_id)
     hosted_zone_properties.pop('ResponseMetadata')
     return hosted_zone_properties
+
+#lambda_handler(event)
