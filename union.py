@@ -13,8 +13,6 @@ compute = boto3.client('ec2')
 dynamodb_client = boto3.client('dynamodb')
 dynamodb_resource = boto3.resource('dynamodb')
 
-#event = { "id": "ee376907-2647-4179-9203-343cfb3017a4", "detail-type": "EC2 Instance State-change Notification", "source": "aws.ec2", "account": "123456789012", "time": "2015-11-11T21:30:34Z", "region": "us-east-1", "resources": [ "arn:aws:ec2:us-east-1:123456789012:instance/i-04308bdc" ], "detail": { "instance-id": "i-04308bdc", "state": "stopped" }}
-
 def lambda_handler(event, context):
     """ Check to see whether a DynamoDB table already exists.  If not, create it.  This table is used to keep a record of
     instances that have been created along with their attributes.  This is necessary because when you terminate an instance
@@ -459,5 +457,3 @@ def get_hosted_zone_properties(zone_id):
     hosted_zone_properties = route53.get_hosted_zone(Id=zone_id)
     hosted_zone_properties.pop('ResponseMetadata')
     return hosted_zone_properties
-
-#lambda_handler(event)
