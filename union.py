@@ -21,25 +21,7 @@ def lambda_handler(event, context):
     if 'DDNS' in tables['TableNames']:
         print 'DynamoDB table already exists'
     else:
-        dynamodb_client.create_table(
-            TableName='DDNS',
-            AttributeDefinitions=[
-                {
-                    'AttributeName': 'InstanceId',
-                    'AttributeType': 'S'
-                },
-            ],
-            KeySchema=[
-                {
-                    'AttributeName': 'InstanceId',
-                    'KeyType': 'HASH'
-                },
-            ],
-            ProvisionedThroughput={
-                'ReadCapacityUnits': 4,
-                'WriteCapacityUnits': 4
-            }
-        )
+        create_table('DDNS')
 
     # Set variables
     # Get the state from the Event stream
@@ -281,6 +263,29 @@ def lambda_handler(event, context):
                     print e
         else:
             print 'No matching zone for %s' % configuration[0]
+
+def create_table(table_name):
+    dynamodb_client.create_table(
+            TableName=table_name,
+            AttributeDefinitions=[
+                {
+                    'AttributeName': 'InstanceId',
+                    'AttributeType': 'S'
+                },
+            ],
+            KeySchema=[
+                {
+                    'AttributeName': 'InstanceId',
+                    'KeyType': 'HASH'
+                },
+            ],
+            ProvisionedThroughput={
+                'ReadCapacityUnits': 4,
+                'WriteCapacityUnits': 4
+            }
+        )
+    table = dynamodb_resource.Table(table_name)
+    table.wait_until_exists()
 
 def create_resource_record(zone_id, host_name, hosted_zone_name, type, value):
     """This function creates resource records in the hosted zone passed by the calling function."""
