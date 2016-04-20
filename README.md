@@ -243,4 +243,4 @@ To learn more about CloudWatch Events, see [Using CloudWatch Events](http://docs
 
 We’ve open-sourced the code in this example in the [AWS Labs GitHub repo](https://github.com/awslabs/aws-lambda-ddns-function) and can’t wait to see your feedback and read your ideas about how to improve the solution.
 
-My colleague Sean Greathouse developed an alternative approach to creating a Dynamic DNS System using API Gateway and Lambda.  Since it runs on endpoint it's perfect for registering machines outside of the AWS ecosystem.  It's For additional information, see [Building a Serverless Dynamic DNS System with AWS](https://medium.com/aws-activate-startup-blog/building-a-serverless-dynamic-dns-system-with-aws-a32256f0a1d8#.2wr0oq8cy)
+My colleague Sean Greathouse developed an alternative approach to creating a Dynamic DNS System using API Gateway and Lambda.  Since it runs on the endpoint it's perfect for registering machines outside of the AWS ecosystem.  For additional information, see [Building a Serverless Dynamic DNS System with AWS](https://medium.com/aws-activate-startup-blog/building-a-serverless-dynamic-dns-system-with-aws-a32256f0a1d8#.2wr0oq8cy)
