@@ -186,7 +186,7 @@ def lambda_handler(event, context):
         # Consider making this an elif CNAME
         else:
             print 'The tag \'%s\' is not a zone tag' % tag.get('Key')
-        if 'CNAME'in tag.get('Key',{}).lstrip().upper():
+        if 'CNAME' in tag.get('Key',{}).lstrip().upper():
             if is_valid_hostname(tag.get('Value')):
                 cname = tag.get('Value').lstrip().lower()
                 cname_host_name = cname.split('.')[0]
