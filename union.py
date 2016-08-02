@@ -33,6 +33,7 @@ def lambda_handler(event, context):
     table = dynamodb_resource.Table('DDNS')
 
     if state == 'running':
+        time.sleep(60)
         instance = compute.describe_instances(InstanceIds=[instance_id])
         # Remove response metadata from the response
         instance.pop('ResponseMetadata')
