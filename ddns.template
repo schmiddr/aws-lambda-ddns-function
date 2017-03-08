@@ -1,0 +1,145 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Buiding a Dynamic DNS for Route 53 using Cloudwatch Events and Lambda based on https://github.com/awslabs/aws-lambda-ddns-function",
+    "Parameters": {
+        "LambdaBucketName": {
+            "Description": "Name of S3 Bucket for where Lambda function zip files are uploaded to",
+            "Type": "String",
+            "MinLength": "3"
+        }
+    },
+    "Resources": {
+        "ddnslambdarole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Sid": "",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "lambda.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                },
+                "RoleName": "ddns-lambda-role",
+                "Policies": [
+                    {
+                        "PolicyName": "ddns-lambda-role",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": "ec2:Describe*",
+                                    "Resource": "*"
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "dynamodb:*"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "logs:CreateLogGroup",
+                                        "logs:CreateLogStream",
+                                        "logs:PutLogEvents"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "route53:*"
+                                    ],
+                                    "Resource": [
+                                        "*"
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "ddnslambda": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Handler": "union.lambda_handler",
+                "FunctionName": "ddns_lambda",
+                "Description": "Create A and PTR records for Private Hosted Zone for EC2 instance launches",
+                "Role": {
+                    "Fn::GetAtt": [
+                        "ddnslambdarole",
+                        "Arn"
+                    ]
+                },
+                "Code": {
+                    "S3Bucket": {
+                        "Ref": "LambdaBucketName"
+                    },
+                    "S3Key": "union.py.zip"
+                },
+                "Runtime": "python2.7",
+                "Timeout": "30"
+            }
+        },
+        "DdnsRule": {
+            "Type": "AWS::Events::Rule",
+            "Properties": {
+                "Description": "trigger whenever CloudWatch detects a change to the state of an EC2 instance",
+                "Name": "ec2_lambda_ddns_rule",
+                "EventPattern": {
+                    "source": [
+                        "aws.ec2"
+                    ],
+                    "detail-type": [
+                        "EC2 Instance State-change Notification"
+                    ],
+                    "detail": {
+                        "state": [
+                            "running",
+                            "shutting-down",
+                            "stopped"
+                        ]
+                    }
+                },
+                "State": "ENABLED",
+                "Targets": [
+                    {
+                        "Arn": {
+                            "Fn::GetAtt": [
+                                "ddnslambda",
+                                "Arn"
+                            ]
+                        },
+                        "Id": "TargetFunctionV1"
+                    }
+                ]
+            }
+        },
+        "PermissionForEventsToInvokeLambda": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+                "FunctionName": {
+                    "Ref": "ddnslambda"
+                },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "events.amazonaws.com",
+                "SourceArn": {
+                    "Fn::GetAtt": [
+                        "DdnsRule",
+                        "Arn"
+                    ]
+                }
+            }
+        }
+    },
+    "Outputs": {}
+}
