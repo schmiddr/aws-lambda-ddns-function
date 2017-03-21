@@ -1,12 +1,12 @@
-#Building a Dynamic DNS for Route 53 using CloudWatch Events and Lambda
+# Building a Dynamic DNS for Route 53 using CloudWatch Events and Lambda
 
-##Introduction
+## Introduction
 
 Dynamic registration of resource records is useful when you have instances that are not behind a load balancer and that you would like to address by a host name and domain suffix of your choosing rather than the default \<region\>.compute.internal or ec2.internal assigned by VPC DNS.
 
 In this project we explore how you can use [CloudWatch Events](https://aws.amazon.com/cloudwatch) and Lambda to create a Dynamic DNS for Route 53. Besides creating A records, this project allows you to create alias, i.e. CNAME records, for when you want to address a server by a "friendly" or alternate name. Although this is antithetical to treating instances as disposable resources, there are still a lot of shops that find this useful.
 
-##Using CloudWatch and Lambda to respond to infrastructure changes in real-time
+## Using CloudWatch and Lambda to respond to infrastructure changes in real-time
 
 With the advent of CloudWatch Events in January 2016, you can now get near real-time information when an AWS resource changes its state, including when instances are launched or terminated.  When you combine this with the power of [Amazon Route 53](https://aws.amazon.com/route53) and [AWS Lambda](https://aws.amazon.com/lambda), you can create a system that closely mimics the behavior of Dynamic DNS.
 
@@ -14,13 +14,13 @@ For example, when a newly-launched instance changes its state from pending to ru
 
 The example provided in this project works precisely this way.  It uses information from a CloudWatch event to gather information about the instance, such as its public and private DNS name, its public and private IP address, the VPC ID of the VPC that the instance was launch in, its tags, and so on.  It then uses this information to create A, PTR, and CNAME records in the appropriate Route 53 public or private hosted zone.  The solution persists data about the instances in an [Amazon DynamoDB](https://aws.amazon.com/dynamodb) table so it can remove resource records when instances are stopped or terminated.
 
-##Route 53 Hosted Zones
+## Route 53 Hosted Zones
 
 Route 53 offers the convenience of domain name services without having to build a globally distributed highly reliable DNS infrastructure.  It allows instances within your VPC to resolve the names of resources that run within your AWS environment. It also lets clients on the Internet resolve names of your public-facing resources.  This is accomplished by querying resource record sets that reside within a Route 53 public or private hosted zone.
 
 A private hosted zone is basically a container that holds information about how you want to route traffic for a domain and its subdomains within one or more VPCs whereas a public hosted zone is a container that holds information about how you want to route traffic from the Internet.
 
-##Choosing between VPC DNS or Route 53 Private Hosted Zones
+## Choosing between VPC DNS or Route 53 Private Hosted Zones
 
 Admittedly, you can use VPC DNS for internal name resolution instead of Route 53 private hosted zones.  Although it doesn’t dynamically create resource records, VPC DNS will provide name resolution for all the hosts within a VPC’s CIDR range.
 
@@ -37,7 +37,7 @@ Route 53 doesn't offer support for dynamic registration of resource record sets 
 
 This was the motivation for creating a serverless architecture that dynamically creates and removes resource records from Route 53 as EC2 instances are created and destroyed.
 
-##DDNS/Lambda example
+## DDNS/Lambda example
 
 Make sure that you have the latest version of the AWS CLI installed locally.   For more information, see [Getting Set Up with the AWS Command Line Interface](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-set-up.html).
 
@@ -45,7 +45,7 @@ For this example, create a new VPC configured with a private and public subnet, 
 
 After the VPC is created, you can proceed to the next steps.
 
-#####Step 1 – Create an IAM role for the Lambda function
+##### Step 1 – Create an IAM role for the Lambda function
 
 In this step, you will use the AWS Command Line Interface (AWS CLI) to create the Identity and Access Management (IAM) role that the Lambda function assumes when the function is invoked.  You also need to create an IAM policy with the required permissions and then attach this policy to the role.
 
@@ -116,7 +116,7 @@ aws iam create-role --role-name ddns-lambda-role --assume-role-policy-document f
 ```
 aws iam attach-role-policy --role-name ddns-lambda-role --policy-arn <enter-your-policy-arn-here>
 ```
-#####Step 2 – Create the Lambda function
+##### Step 2 – Create the Lambda function
 
 The Lambda function uses modules included in the Python 2.7 Standard Library and the AWS SDK for Python module (boto3), which is preinstalled as part of the Lambda service.  As such, you do not need to create a deployment package for this function.
 
@@ -150,7 +150,7 @@ aws lambda create-function --function-name ddns_lambda --runtime python2.7 --rol
 ```
 4) The output of the command returns the ARN of the newly-created function.  Save this ARN, since you will need it in the next section.
 
-#####Step 3 – Create the CloudWatch Events Rule
+##### Step 3 – Create the CloudWatch Events Rule
 
 In this step, you create the CloudWatch Events rule that triggers the Lambda function whenever CloudWatch detects a change to the state of an EC2 instance.  You configure the rule to fire when any EC2 instance state changes to “running”, “shutting down”, or “stopped”.  Use the **aws events put-rule** command to create the rule and set the Lambda function as the execution target:
 ```
@@ -166,11 +166,11 @@ Next, you add the permissions required for the CloudWatch Events rule to execute
 ```
 aws lambda add-permission --function-name ddns_lambda --statement-id 45 --action lambda:InvokeFunction --principal events.amazonaws.com --source-arn <enter-your-cloudwatch-events-rule-arn-here>
 ```
-#####Step 4 – Create the private hosted zone in Route 53
+##### Step 4 – Create the private hosted zone in Route 53
 
 To create the private hosted zone in Route 53, follow the steps outlined in [Creating a Private Hosted Zone](http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/hosted-zone-private-creating.html).
 
-#####Step 5 – Create a DHCP options set and associate it with the VPC
+##### Step 5 – Create a DHCP options set and associate it with the VPC
 
 In this step, you create a new DHCP options set, and set the domain to be that of your private hosted zone.
 
@@ -182,7 +182,7 @@ In this step, you create a new DHCP options set, and set the domain to be that o
 
 3) Next, follow the steps outlined in Changing the Set of DHCP Options a VPC Uses to update the VPC to use the newly-created DHCP options set.
 
-#####Step 6 – Launching the EC2 instance and validating results
+##### Step 6 – Launching the EC2 instance and validating results
 
 In this step, you launch an EC2 instance and verify that the function executed successfully.
 
@@ -241,7 +241,7 @@ In this step, you verify that your Lambda function successfully updated the Rout
 10) Verify that the records have been removed from the zone file by the Lambda function.
 
 
-##Conclusion
+## Conclusion
 
 Now that you’ve seen how you can combine various AWS services to automate the creation and removal of Route 53 resource records, we hope it inspires you to create your own solutions.  CloudWatch Events is a powerful tool because it allows you to respond to events in real-time, such as when an instance changes state.  When used with Lambda, you can create highly scalable serverless infrastructures that react instantly to infrastructure changes.  
 
