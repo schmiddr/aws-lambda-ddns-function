@@ -87,7 +87,7 @@
                     "S3Key": "union.py.zip"
                 },
                 "Runtime": "python2.7",
-                "Timeout": "30"
+                "Timeout": "90"
             }
         },
         "DdnsRule": {
