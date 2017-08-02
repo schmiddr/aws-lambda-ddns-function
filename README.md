@@ -146,7 +146,7 @@ zip union.zip union.py
 
 3) Execute the following command to create the function.  Note that you will need to update the command to use the ARN of the role that you created earlier, as well as the local path to the union.zip file containing the Python code for the Lambda function.
 ```
-aws lambda create-function --function-name ddns_lambda --runtime python2.7 --role <enter-your-role-arn-here> --handler union.lambda_handler --timeout 30 --zip-file fileb://<LOCAL PATH>/union.zip
+aws lambda create-function --function-name ddns_lambda --runtime python2.7 --role <enter-your-role-arn-here> --handler union.lambda_handler --timeout 90 --zip-file fileb://<LOCAL PATH>/union.zip
 ```
 4) The output of the command returns the ARN of the newly-created function.  Save this ARN, since you will need it in the next section.
 
