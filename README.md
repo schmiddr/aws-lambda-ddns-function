@@ -83,6 +83,15 @@ The policy includes **ec2:Describe permission**, required for the function to ob
     "Resource": [
       "*"
     ]
+  },
+  {
+    "Effect": "Allow",
+    "Action": [
+        "SNS:Publish"
+    ],
+    "Resource": [
+        { "Fn::Join": ["", [ "arn:aws:sns:",{"Ref":"AWS::Region"}, ":",{"Ref":"AWS::AccountId"},":DDNSAlerts"]]}
+    ]
   }]
 }
 ```
@@ -240,6 +249,13 @@ In this step, you verify that your Lambda function successfully updated the Rout
 
 10) Verify that the records have been removed from the zone file by the Lambda function.
 
+## Python3 Lambda
+
+The python3 version of the lambda introduces some new features:
+
+* Has SNS notifications for errors.  NOTE: The cloudformation template will setup an SNS topic named DDNSAlerts.  Manually setup the subscriptions you want to this topic.
+* For CNAME tags, an CNAME record is created to to the dns address, and a PTR record it created to point to the CNAME
+* Tests have been added to test the lambda, and any changes.  Run 'tox' command in bash shell to run tests and view coverage report in htmlcov directory
 
 ## Conclusion
 

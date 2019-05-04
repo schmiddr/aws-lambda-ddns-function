@@ -1,0 +1,13 @@
+.idea
+.idea/*
+.tox
+.tox/*
+htmlcov
+htmlcov/*
+.coverage
+.coverage*
+.coverage/*
+.pytest_cache
+.pytest_cache/*
+__pycache__
+__pycache__/*
