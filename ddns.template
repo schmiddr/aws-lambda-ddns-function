@@ -9,6 +9,17 @@
         }
     },
     "Resources": {
+        "snsTopic" : {
+            "Type" : "AWS::SNS::Topic",
+            "Properties" : {
+                "Subscription" : [{
+                        "Endpoint" : "willrubel@gmail.com",
+                        "Protocol" : "email"
+                    }
+                ],
+                "TopicName" : "DDNSAlerts"
+            }
+        },
         "ddnslambdarole": {
             "Type": "AWS::IAM::Role",
             "Properties": {
@@ -61,6 +72,17 @@
                                     "Resource": [
                                         "*"
                                     ]
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "SNS:Publish"
+                                    ],
+                                    "Resource": [
+
+                                        { "Fn::Join": ["", [ "arn:aws:sns:",{"Ref":"AWS::Region"}, ":",{"Ref":"AWS::AccountId"},":DDNSAlerts"]]}
+                                    ]
+
                                 }
                             ]
                         }
@@ -86,7 +108,7 @@
                     },
                     "S3Key": "union.py.zip"
                 },
-                "Runtime": "python2.7",
+                "Runtime": "python3.6",
                 "Timeout": "90"
             }
         },
